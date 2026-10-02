@@ -24,7 +24,19 @@ lightbox.addEventListener('keydown',event=>{if(videoMode)return;if(event.key==='
 document.querySelectorAll('[data-video]').forEach(button=>button.addEventListener('click',()=>{clearMedia();returnFocus=button;videoMode=true;document.querySelector('#lightbox-title').textContent=button.dataset.title;document.querySelector('#lightbox-count').textContent='MOTION';document.querySelector('.lightbox-controls').hidden=true;const video=document.createElement('video');video.src=button.dataset.video;video.poster=button.dataset.poster;video.controls=true;video.playsInline=true;video.preload='metadata';lightboxMedia.append(video);lightbox.showModal();lockPage();video.play().catch(()=>{});}));
 document.querySelector('#open-resume').addEventListener('click',event=>{returnFocus=event.currentTarget;resume.showModal();resume.scrollTop=0;lockPage()});
 [lightbox,resume].forEach(dialog=>{dialog.querySelector('.close-dialog').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close()});dialog.addEventListener('close',()=>{if(dialog===lightbox)clearMedia();document.body.style.overflow='';returnFocus?.focus({preventScroll:true})})});
-document.querySelector('#copy-contact').addEventListener('click',async()=>{const result=document.querySelector('#contact-feedback');try{await navigator.clipboard.writeText('18326036425');result.textContent='微信号已复制：18326036425'}catch{result.textContent='微信号：18326036425（可选中复制）'}});
+let contactToastTimer;
+async function copyWechat(){
+ const result=document.querySelector('#contact-feedback');
+ let copied=false;
+ try{await navigator.clipboard.writeText('18326036425');copied=true}catch{
+  const field=document.createElement('textarea');field.value='18326036425';field.setAttribute('readonly','');field.style.cssText='position:fixed;left:-9999px;top:0';document.body.append(field);field.select();
+  try{copied=document.execCommand('copy')}catch{}finally{field.remove();document.querySelector('#copy-contact').focus({preventScroll:true})}
+ }
+ clearTimeout(contactToastTimer);result.textContent=copied?'已复制微信号：18326036425':'复制未成功，请手动复制：18326036425';result.classList.add('is-visible');
+ contactToastTimer=setTimeout(()=>{result.classList.remove('is-visible');result.textContent=''},3500);
+}
+document.querySelector('#copy-contact').addEventListener('click',copyWechat);
+document.querySelector('.contact-link').addEventListener('click',event=>{event.preventDefault();copyWechat();nav.classList.remove('open');menu.setAttribute('aria-expanded','false');history.replaceState(null,'','#wechat');document.querySelector('#wechat').scrollIntoView({behavior:prefersReducedMotion.matches?'instant':'smooth',block:'center'});document.querySelector('#copy-contact').focus({preventScroll:true});});
 document.querySelector('#print-resume').addEventListener('click',()=>window.print());
 let ticking=false;function updateProgress(){const total=document.documentElement.scrollHeight-innerHeight;document.querySelector('.reading-progress').style.width=`${total>0?scrollY/total*100:0}%`;ticking=false}addEventListener('scroll',()=>{if(!ticking){requestAnimationFrame(updateProgress);ticking=true}},{passive:true});updateProgress();
 const navSections=[...document.querySelectorAll('main>section[id]')];
